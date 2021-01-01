@@ -1,0 +1,8 @@
+---
+
+- include_tasks: import-gpg-keys.yml
+
+- include_tasks: ntp.yml
+  when: ntp_server is defined
+
+- include_tasks: admin-customizations.yml

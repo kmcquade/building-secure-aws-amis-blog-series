@@ -1,0 +1,17 @@
+---
+# OS for
+#is_rhel7: false
+#is_centos7: true
+
+default_user: centos
+
+# Admin troubleshooting packages
+troubleshooting_packages:
+  - nmap-ncat
+  - tcpdump
+  - telnet
+  - sendmail # for auditd notification and to resolve selinux error
+
+disable_gpg_check: yes # yes/no
+
+# dns_server = ""

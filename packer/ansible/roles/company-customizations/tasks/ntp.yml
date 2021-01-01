@@ -1,0 +1,40 @@
+# systemctl enable ntpd
+
+- name: Verify NTP server connectivity
+  shell: ntpdate -q {{ ntp_server }}
+  when: ntp_server is defined
+
+- name: Ensure NTP service is stopped and disabled as configured.
+  systemd:
+    name: ntpd
+    state: stopped
+    enabled: true
+  when: ntp_server is defined
+
+- name: Sets NTP Server
+  become: 'yes'
+  become_method: sudo
+  template:
+    src: etc/ntp.conf.j2
+    dest: /etc/ntp.conf
+    mode: '0644'
+    owner: root
+    group: root
+  tags: ntp
+  when: ntp_server is defined
+
+- name: restart ntpd
+  systemd:
+    name: ntpd
+    state: restarted
+    daemon_reload: yes
+    enabled: true
+  tags: ntp
+  when: ntp_server is defined
+
+- name: Verify NTP server connectivity
+  shell: systemctl status ntpd
+  when: ntp_server is defined
+
+- name: restorecon for filesystem in this task file to avoid SELinux issues
+  shell: restorecon -R -v /etc/

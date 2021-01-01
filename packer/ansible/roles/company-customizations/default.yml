@@ -1,0 +1,8 @@
+---
+- name: wrapper playbook for testing "company-customizations" with custom vars for testing
+  hosts: localhost
+  become: yes
+  become_method: sudo
+  become_user: root
+  roles:
+    - company-customizations

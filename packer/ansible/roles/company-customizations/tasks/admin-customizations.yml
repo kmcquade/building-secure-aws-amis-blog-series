@@ -1,0 +1,29 @@
+- name: bashrc modifications
+  become: 'yes'
+  become_method: sudo
+  template:
+    src: root/.bashrc.j2
+    dest: /root/.bashrc
+    mode: '0644'
+    owner: root
+    group: root
+  tags: bash
+
+- name: Load ec2-users sudoers
+  template:
+    src: 'etc/sudoers.d/ec2-user.j2'
+    dest: '/etc/sudoers.d/{{ default_user }}'
+    owner: 'root'
+    group: 'root'
+    mode: '0440'
+  tags: sudoers
+  when: default_user is defined
+
+- name: Ensure admin troubleshooting packages are installed.
+  yum:
+    name: "{{ troubleshooting_packages }}"
+    state: present
+    disable_gpg_check: "{{ disable_gpg_check }}"
+
+- name: restorecon for filesystem in this task file to avoid SELinux issues
+  shell: restorecon -R -v /etc/

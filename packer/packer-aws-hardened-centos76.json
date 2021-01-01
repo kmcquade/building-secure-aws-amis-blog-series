@@ -1,0 +1,132 @@
+{
+  "description": "Amazon EBS Builder for CentOS 7 Hardening",
+  "variables": {
+    "aws_access_key_id": "{{ env `AWS_ACCESS_KEY_ID` }}",
+    "aws_secret_access_key": "{{ env `AWS_SECRET_ACCESS_KEY` }}",
+    "token": "{{env `AWS_SESSION_TOKEN`}}",
+    "ssh_private_key_file": "{{ env `SSH_PRIVATE_KEY_FILE` }}",
+    "ssh_keypair_name": "{{ env `SSH_KEYPAIR_NAME`}}",
+    "aws_region": "{{ env `AWS_REGION` }}",
+    "bucket_name": "{{ env `BUCKET_NAME`}}",
+    "debug": "false",
+    "ssh_username": "{{ env `SSH_USERNAME` }}",
+    "ssh_password": "{{ env `SSH_PASSWORD` }}",
+    "scap_profile": "{{ env `SCAP_PROFILE` }}",
+    "vm_name": "{{ env `VM_NAME` }}",
+    "instance_type": "{{ env `INSTANCE_TYPE` }}",
+    "ami_id": "{{ env `AMI_ID` }}",
+    "built_by": "Packer",
+    "environment": "{{ env `ENVIRONMENT` }}"
+  },
+  "builders": [
+    {
+      "name": "amazon-ebs-centos-7.6-systemd",
+      "type": "amazon-ebs",
+      "region": "{{ user `aws_region` }}",
+      "force_deregister": true,
+      "force_delete_snapshot": true,
+      "ssh_pty": true,
+      "ena_support": true,
+      "encrypt_boot": true,
+      "ssh_keypair_name": "{{ user `ssh_keypair_name` }}",
+      "ssh_private_key_file": "{{ user `ssh_private_key_file` }}",
+      "instance_type": "{{ user `instance_type` }}",
+      "associate_public_ip_address": false,
+      "source_ami": "{{ user `ami_id` }}",
+      "source_ami_filter": {
+        "filters": {
+          "virtualization-type": "hvm",
+          "tag:Name": "centos7-minimal-import-*",
+          "root-device-type": "ebs"
+        },
+        "owners": ["self"],
+        "most_recent": true
+      },
+      "ssh_username": "{{ user `ssh_username` }}",
+      "ssh_timeout": "10m",
+      "ami_virtualization_type": "hvm",
+      "ami_description": "centos7-hardened-base-{{isotime \"2006-01-02\"}}",
+      "ami_name": "centos7-hardened-base-{{isotime \"2006-01-02\"}}",
+      "run_tags": {
+        "Name": "pkrxxbldl01uesbx",
+        "Environment": "{{ user `environment` }}",
+        "Built-By": "{{ user `built_by` }}"
+      },
+      "tags": {
+        "Name": "centos7-hardened-base-{{isotime \"2006-01-02\"}}",
+        "Environment": "{{ user `environment` }}",
+        "Built-By": "{{ user `built_by` }}",
+        "Base-AMI-Name": "{{ .SourceAMIName }}",
+        "Source-AMI": "{{ .SourceAMI }}",
+        "Extra": "{{ .SourceAMITags.TagName }}"
+      }
+    }
+  ],
+  "provisioners": [
+    {
+      "type": "file",
+      "destination": "/tmp",
+      "source": "files"
+    },
+   {
+      "type": "shell",
+      "execute_command": "sudo -S sh '{{.Path}}'",
+      "inline":
+      [
+        "cp -f /tmp/files/cloud.cfg /etc/cloud/cloud.cfg"
+      ]
+    },
+    {
+      "type": "shell",
+      "execute_command": "echo '{{user `SSH_USERNAME`}}' | sudo -S env {{ .Vars }} {{ .Path }}",
+      "scripts": [
+        "scripts/ansible.sh",
+        "scripts/root.sh",
+        "scripts/aws/base.sh"
+      ],
+      "environment_vars": [
+        "SSH_USERNAME={{ user `ssh_username` }}"
+      ]
+    },
+    {
+      "type": "shell",
+      "execute_command": "echo '{{user `SSH_USERNAME`}}' | sudo -S env {{ .Vars }} {{ .Path }}",
+      "scripts": [
+        "scripts/hardening/aide.sh",
+        "scripts/hardening/auditd.sh",
+        "scripts/hardening/banner.sh",
+        "scripts/hardening/cron.sh",
+        "scripts/hardening/firewalld.sh",
+        "scripts/hardening/fstab.sh",
+        "scripts/hardening/limits.sh",
+        "scripts/hardening/login_defs.sh",
+        "scripts/hardening/modprobe.sh",
+        "scripts/hardening/ntp.sh",
+        "scripts/hardening/pam.sh",
+        "scripts/hardening/permissions.sh",
+        "scripts/hardening/pwquality.sh",
+        "scripts/hardening/rsyslog.sh",
+        "scripts/hardening/selinux.sh",
+        "scripts/hardening/sshd_config.sh",
+        "scripts/hardening/supplemental.sh",
+        "scripts/hardening/sysctl.sh",
+        "scripts/hardening/umask.sh",
+        "scripts/hardening/yum.sh"
+      ],
+      "environment_vars": [
+        "SSH_USERNAME={{ user `ssh_username` }}"
+      ]
+    },
+    {
+      "type": "shell",
+      "execute_command": "echo '{{user `SSH_USERNAME`}}' | sudo -S env {{ .Vars }} {{ .Path }}",
+      "scripts": [
+        "scripts/clean/linux-sysprep.sh",
+        "scripts/clean/cleanup.sh"
+      ],
+      "environment_vars": [
+        "SSH_USERNAME={{ user `ssh_username` }}"
+      ]
+    }
+  ]
+}

@@ -1,0 +1,31 @@
+##### RHEL EPEL
+- copy:
+    src: "{{ role_path }}/files/gpg/RPM-GPG-KEY-EPEL-7"
+    dest: /etc/pki/rpm-gpg/RPM-GPG-KEY-EPEL-7
+  when:
+    - ansible_facts['distribution'] == 'Red Hat Enterprise Linux'
+    - ansible_facts['distribution_major_version'] == "7"
+    - enable_epel|bool == true
+
+- rpm_key:
+    state: present
+    key: /etc/pki/rpm-gpg/RPM-GPG-KEY-EPEL-7
+  when:
+    - ansible_facts['distribution'] == 'Red Hat Enterprise Linux'
+    - ansible_facts['distribution_major_version'] == "7"
+    - enable_epel|bool == true
+
+##### CentOS
+- copy:
+    src: "{{ role_path }}/files/gpg/RPM-GPG-KEY-CentOS-7"
+    dest: /etc/pki/rpm-gpg/RPM-GPG-KEY-CentOS-7
+  when:
+    - ansible_facts['distribution'] == "CentOS"
+    - ansible_facts['distribution_major_version'] == "7"
+
+- rpm_key:
+    state: present
+    key: /etc/pki/rpm-gpg/RPM-GPG-KEY-CentOS-7
+  when:
+    - ansible_facts['distribution'] == "CentOS"
+    - ansible_facts['distribution_major_version'] == "7"
